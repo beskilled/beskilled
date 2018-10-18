@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Exception;
+use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -43,17 +44,17 @@ class Handler extends ExceptionHandler
      * @param  \Exception  $exception
      * @return \Illuminate\Http\Response
      */
-    public function render($request, Exception $e)
+    public function render($request, Exception $exception)
     {
-        $response = parent::render($request, $e);
-        if ($e instanceof ValidationException) {
+        $response = parent::render($request, $exception);
+        if ($exception instanceof ValidationException) {
             return response()->json([
                 'errors' => json_decode($response->content())
             ], $response->getStatusCode());
         }
 
-        if ($e instanceof QueryException) {
-            if ($e->errorInfo[1] == 1062) {
+        if ($exception instanceof QueryException) {
+            if ($exception->errorInfo[1] == 1062) {
                 return response()->json([
                     'error' => 'Duplicate entry'
                 ], 400);

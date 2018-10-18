@@ -129,6 +129,20 @@ $app->alias('auth', Illuminate\Auth\AuthManager::class);
 |
 */
 
+$app->router->group(['namespace' => 'App\Http\Controllers'], function ($router) {
+    require __DIR__ . '/../routes/web.php';
+});
+
+$configs = [
+    'auth',
+    'mail',
+    'jwt'
+];
+
+array_walk($configs, function ($config) use ($app) {
+    $app->configure($config);
+});
+
 $app->router->group([
     'namespace' => 'App\Http\Controllers',
 ], function ($router) {
