@@ -47,4 +47,22 @@ class LoginControllerTest extends TestCase
             ->seeJsonStructure(['access_token']);
     }
 
+    /** @test */
+    public function it_should_be_able_to_logout()
+    {
+        $user = factory(\App\User::class)->create(['email' => $this->user['email']]);
+
+        $this->apiAs($user, 'POST', '/logout')
+            ->seeJsonContains(['message' => 'Successfully logged out']);
+    }
+
+    /** @test */
+    public function it_should_return_user_detail()
+    {
+        $user = factory(\App\User::class)->create(['email' => $this->user['email']]);
+
+        $this->apiAs($user, 'GET', '/me')
+             ->seeJsonContains(['email' => $this->user['email']]);
+    }
+
 }

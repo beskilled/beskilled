@@ -43,7 +43,7 @@ class LoginController extends Controller
      */
     public function logout()
     {
-        app()->auth->logout();
+//        app()->auth->logout();
 
         return response()->json(['message' => 'Successfully logged out']);
     }

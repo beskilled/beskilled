@@ -1,5 +1,6 @@
 <?php
 
+/** @var \Laravel\Lumen\Routing\Router $router */
 $router->post('/login', 'Auth\LoginController@login');
 $router->post('/register', 'Auth\RegisterController@register');
 $router->group(['middleware' => 'auth:api'], function () use ($router) {
