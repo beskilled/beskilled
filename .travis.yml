@@ -7,18 +7,31 @@ php:
 before_script:
   - cp .env.travis .env
   - composer self-update
-  - composer install --prefer-source --no-interaction --dev
+  - composer install --prefer-source --no-interaction
   - php artisan key:generate
+  - php artisan jwt:secret -f
   - php artisan migrate
 
 before_install:
   - mysql -e 'CREATE DATABASE beskilled_test;'
 
 script:
-  - phpunit
+  - vendor/bin/phpunit
 
 services:
   - mysql
 
 notifications:
   email: false
+
+addons:
+  apt:
+    sources:
+      - mysql-5.7-trusty
+    packages:
+      - mysql-server
+      - mysql-client
+
+dist: trusty
+
+sudo: required
