@@ -43,8 +43,25 @@ class Handler extends ExceptionHandler
      * @param  \Exception  $exception
      * @return \Illuminate\Http\Response
      */
-    public function render($request, Exception $exception)
+    public function render($request, Exception $e)
     {
-        return parent::render($request, $exception);
+        $response = parent::render($request, $e);
+        if ($e instanceof ValidationException) {
+            return response()->json([
+                'errors' => json_decode($response->content())
+            ], $response->getStatusCode());
+        }
+
+        if ($e instanceof QueryException) {
+            if ($e->errorInfo[1] == 1062) {
+                return response()->json([
+                    'error' => 'Duplicate entry'
+                ], 400);
+            }
+        }
+
+        return response()->json([
+            'errors' => $response->exception->getMessage() ?: "Invalid URL"
+        ], $response->getStatusCode());
     }
 }

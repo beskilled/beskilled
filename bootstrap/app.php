@@ -1,12 +1,8 @@
 <?php
 
-require_once __DIR__.'/../vendor/autoload.php';
+use Symfony\Component\Console\Input\ArgvInput;
 
-try {
-    (new Dotenv\Dotenv(dirname(__DIR__)))->load();
-} catch (Dotenv\Exception\InvalidPathException $e) {
-    //
-}
+require_once __DIR__.'/../vendor/autoload.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -23,9 +19,41 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
-// $app->withFacades();
+/**
+ * Load DotEnv based on environment
+ */
 
-// $app->withEloquent();
+if (php_sapi_name() == 'cli') {
+    $input = new ArgvInput;
+
+    if ($input->hasParameterOption('--env')) {
+        $file = '.env.' . $input->getParameterOption('--env');
+    }
+}
+
+if (empty($file)) {
+    $file = '.env.' . env('APP_ENV');
+}
+
+if (! file_exists($file)) {
+    $file = ".env";
+}
+
+try {
+    (new Dotenv\Dotenv((__DIR__ . '/../'), $file))->load();
+} catch (Dotenv\Exception\InvalidPathException $e) {
+    //
+}
+
+$app->withFacades(true, [
+    Illuminate\Support\Facades\Mail::class    => 'Mail',
+    Tymon\JWTAuth\Facades\JWTAuth::class      => 'JWTAuth',
+    Tymon\JWTAuth\Facades\JWTFactory::class   => 'JWTFactory',
+    Illuminate\Support\Facades\Hash::class    => 'Hash',
+    Illuminate\Database\Eloquent\Model::class => 'Eloquent'
+]);
+
+$app->withEloquent();
 
 /*
 |--------------------------------------------------------------------------
@@ -59,13 +87,9 @@ $app->singleton(
 |
 */
 
-// $app->middleware([
-//     App\Http\Middleware\ExampleMiddleware::class
-// ]);
-
-// $app->routeMiddleware([
-//     'auth' => App\Http\Middleware\Authenticate::class,
-// ]);
+$app->routeMiddleware([
+    'auth' => \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -78,11 +102,21 @@ $app->singleton(
 |
 */
 
-// $app->register(App\Providers\AppServiceProvider::class);
-// $app->register(App\Providers\AuthServiceProvider::class);
-// $app->register(App\Providers\EventServiceProvider::class);
+$app->register(Illuminate\Mail\MailServiceProvider::class);
+$app->register(Illuminate\Redis\RedisServiceProvider::class);
 
-$app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
+$app->register(App\Providers\AppServiceProvider::class);
+$app->register(App\Providers\EventServiceProvider::class);
+$app->register(App\Providers\FormRequestServiceProvider::class);
+
+$app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+
+if ($app->environment() == 'local' || 'testing') {
+    $app->register(Flipbox\LumenGenerator\LumenGeneratorServiceProvider::class);
+}
+
+$app->alias('cache', Illuminate\Cache\CacheManager::class);
+$app->alias('auth', Illuminate\Auth\AuthManager::class);
 
 /*
 |--------------------------------------------------------------------------
